@@ -1,0 +1,58 @@
+{
+    "message": "File processed successfully",
+    "thread_count": 1521,
+    "threads": [
+        {
+            "cpu_ms": 762.38,
+            "elapsed_s": 75045.51,
+            "id": "1",
+            "memory": "0x00007f78e4f69000",
+            "name": "main",
+            "nid": "0x1b63",
+            "os_priority": "0",
+            "priority": "5",
+            "state": "RUNNABLE",
+            "status": "runnable",
+            "tid": "0x000055b1ef542c00"
+        },
+        {
+            "cpu_ms": 868.78,
+            "elapsed_s": 75044.58,
+            "id": "25",
+            "memory": "0x00007f78ad036000",
+            "name": "MSC service thread 1-1",
+            "nid": "0x1bce",
+            "os_priority": "0",
+            "priority": "5",
+            "state": "WAITING (parking)",
+            "status": "waiting on condition",
+            "tid": "0x000055b1f11e1c70"
+        },
+        {
+            "cpu_ms": 729.57,
+            "elapsed_s": 75044.58,
+            "id": "26",
+            "memory": "0x00007f78acf35000",
+            "name": "MSC service thread 1-2",
+            "nid": "0x1bcf",
+            "os_priority": "0",
+            "priority": "5",
+            "state": "WAITING (parking)",
+            "status": "waiting on condition",
+            "tid": "0x000055b1f1359b50"
+        },
+        {
+            "cpu_ms": 224.55,
+            "elapsed_s": 75044.57,
+            "id": "27",
+            "memory": "0x00007f78ace34000",
+            "name": "MSC service thread 1-3",
+            "nid": "0x1bd1",
+            "os_priority": "0",
+            "priority": "5",
+            "state": "WAITING (parking)",
+            "status": "waiting on condition",
+            "tid": "0x000055b1f09c88a0"
+        }
+    ]
+}

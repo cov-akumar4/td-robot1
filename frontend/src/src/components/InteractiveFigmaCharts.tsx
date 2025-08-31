@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'motion/react'
 import { Card } from './ui/card'
 import svgPaths from "../imports/svg-mim0gjvhpt"
+import { useApi } from "../../contexts/ApiContext";
 
 interface TooltipData {
   name: string
@@ -26,11 +27,6 @@ interface PerformanceTooltipData {
   color: string
 }
 
-function InteractiveThreadStatesChart() {
-  const [hoveredSegment, setHoveredSegment] = useState<string | null>(null)
-  const [tooltip, setTooltip] = useState<{ data: TooltipData; x: number; y: number } | null>(null)
-  const [isChartReady, setIsChartReady] = useState(false)
-
   const segmentData = [
     { id: 'waiting', name: 'WAITING', value: 94, percentage: '38%', color: '#00C49F', hoverColor: '#00E5B8' },
     { id: 'running', name: 'RUNNING', value: 47, percentage: '19%', color: '#0088FE', hoverColor: '#2A9BFF' },
@@ -38,15 +34,72 @@ function InteractiveThreadStatesChart() {
     { id: 'timed_waiting', name: 'TIMED_WAITING', value: 69, percentage: '28%', color: '#FF8042', hoverColor: '#FF9B54' },
     { id: 'terminated', name: 'TERMINATED', value: 12, percentage: '5%', color: '#8884D8', hoverColor: '#A296E8' }
   ]
+function InteractiveThreadStatesChart() {
+  const [hoveredSegment, setHoveredSegment] = useState<string | null>(null)
+  const [tooltip, setTooltip] = useState<{ data: TooltipData; x: number; y: number } | null>(null)
+  const [isChartReady, setIsChartReady] = useState(false)
+  const { threads } = useApi() as { threads: any[] }
 
+
+function generateSegmentData(threads: any[]): any[] {
+  const stateColors: any = {
+    WAITING: { color: '#00C49F', hoverColor: '#00E5B8', id: 'waiting' },
+    RUNNING: { color: '#0088FE', hoverColor: '#2A9BFF', id: 'running' },
+    BLOCKED: { color: '#FFBB28', hoverColor: '#FFD93A', id: 'blocked' },
+    TIMED_WAITING: { color: '#FF8042', hoverColor: '#FF9B54', id: 'timed_waiting' },
+    TERMINATED: { color: '#8884D8', hoverColor: '#A296E8', id: 'terminated' },
+    OTHER: { color: '#CCCCCC', hoverColor: '#AAAAAA', id: 'other' }
+  };
+
+  const normalizeState = (state: string): string => {
+    if (state.includes('RUNNABLE')) return 'RUNNING';
+    if (state.includes('WAITING')) return 'WAITING';
+    if (state.includes('BLOCKED')) return 'BLOCKED';
+    if (state.includes('TIMED_WAITING')) return 'TIMED_WAITING';
+    return 'TERMINATED';
+  };
+
+  const stateCounts: any = threads.reduce((acc: any, thread: any) => {
+    const state = normalizeState(thread.state);
+    if (!acc[state]) acc[state] = 0;
+    acc[state] += 1;
+    return acc;
+  }, {});
+
+  const totalThreads = threads.length;
+
+  // Filter out zero-count states and map to segmentData
+  const segmentData: any[] = Object.keys(stateCounts)
+    .filter(state => stateCounts[state] > 0)
+    .map(state => {
+      const count = stateCounts[state];
+      const colors = stateColors[state] || stateColors['OTHER'];
+      return {
+        id: colors.id,
+        name: state,
+        value: count,
+        percentage: `${Math.round((count / totalThreads) * 100)}%`,
+        color: colors.color,
+        hoverColor: colors.hoverColor
+      };
+    });
+
+  return segmentData;
+}
+
+
+  const segmentData = generateSegmentData(threads);
+
+  
   useEffect(() => {
+    console.log('segmentdata',segmentData);
     const timer = setTimeout(() => setIsChartReady(true), 2000)
     return () => clearTimeout(timer)
   }, [])
 
   const handleSegmentHover = (segment: typeof segmentData[0], event: React.MouseEvent) => {
     setHoveredSegment(segment.id)
-    
+
     setTooltip({
       data: segment,
       x: event.clientX,
@@ -80,15 +133,15 @@ function InteractiveThreadStatesChart() {
         />
 
         <div className="p-6 relative overflow-visible">
-          <motion.div 
+          <motion.div
             className="mb-6"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <motion.h3 
+            <motion.h3
               className="text-xl font-semibold text-gray-900 mb-2"
-              animate={{ 
+              animate={{
                 textShadow: hoveredSegment ? '0 0 20px rgba(79, 70, 229, 0.3)' : '0 0 0px rgba(79, 70, 229, 0)'
               }}
             >
@@ -96,7 +149,7 @@ function InteractiveThreadStatesChart() {
             </motion.h3>
             <p className="text-sm text-gray-600">Current distribution of thread states in the dump</p>
           </motion.div>
-          
+
           <div className="relative h-[400px] w-full flex items-center justify-center">
             <div className="relative w-[500px] h-[400px]">
               {/* Animated Glow Ring */}
@@ -142,7 +195,7 @@ function InteractiveThreadStatesChart() {
               ))}
 
               {/* Interactive Pie Chart */}
-              <motion.div 
+              <motion.div
                 className="absolute left-[154px] size-[192px] top-[50px]"
                 initial={{ scale: 0.5, opacity: 0, rotate: -180 }}
                 animate={{ scale: 1, opacity: 1, rotate: 0 }}
@@ -158,36 +211,36 @@ function InteractiveThreadStatesChart() {
                         <stop offset="100%" stopColor={segment.color} stopOpacity="0.9" />
                       </radialGradient>
                     ))}
-                    
+
                     {/* Glow Filter */}
                     <filter id="glow">
-                      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                      <feMerge> 
-                        <feMergeNode in="coloredBlur"/>
-                        <feMergeNode in="SourceGraphic"/>
+                      <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                      <feMerge>
+                        <feMergeNode in="coloredBlur" />
+                        <feMergeNode in="SourceGraphic" />
                       </feMerge>
                     </filter>
                   </defs>
 
                   <g>
                     {/* Background Circle with pulse effect */}
-                    <motion.circle 
-                      cx="96.1321" 
-                      cy="96.1321" 
-                      fill="#F8FAFC" 
-                      r="95.6321" 
+                    <motion.circle
+                      cx="96.1321"
+                      cy="96.1321"
+                      fill="#F8FAFC"
+                      r="95.6321"
                       stroke="white"
                       strokeWidth="3"
                       initial={{ r: 0, opacity: 0 }}
-                      animate={{ 
-                        r: 95.6321, 
+                      animate={{
+                        r: 95.6321,
                         opacity: 1,
                         strokeWidth: hoveredSegment ? 5 : 3
                       }}
                       transition={{ duration: 1, delay: 0.5 }}
                       filter="url(#glow)"
                     />
-                    
+
                     {/* Waiting Segment */}
                     <motion.g
                       onMouseEnter={(e) => handleSegmentHover(segmentData[0], e)}
@@ -208,19 +261,19 @@ function InteractiveThreadStatesChart() {
                       <mask fill="white" id="path-2-inside-1_189_709">
                         <path d={svgPaths.p21c99500} />
                       </mask>
-                      <motion.path 
-                        d={svgPaths.p21c99500} 
+                      <motion.path
+                        d={svgPaths.p21c99500}
                         fill={hoveredSegment === 'waiting' ? `url(#gradient-waiting)` : '#00C49F'}
-                        mask="url(#path-2-inside-1_189_709)" 
-                        stroke="white" 
+                        mask="url(#path-2-inside-1_189_709)"
+                        stroke="white"
                         strokeWidth="3"
                         initial={{ pathLength: 0, opacity: 0 }}
-                        animate={{ 
-                          pathLength: 1, 
+                        animate={{
+                          pathLength: 1,
                           opacity: 1,
                           strokeWidth: hoveredSegment === 'waiting' ? 5 : 3
                         }}
-                        transition={{ 
+                        transition={{
                           pathLength: { duration: 2, delay: 0.6, ease: "easeOut" },
                           opacity: { duration: 0.5, delay: 0.6 },
                           strokeWidth: { duration: 0.3 }
@@ -230,7 +283,7 @@ function InteractiveThreadStatesChart() {
                         }}
                       />
                     </motion.g>
-                    
+
                     {/* Running Segment */}
                     <motion.g
                       onMouseEnter={(e) => handleSegmentHover(segmentData[1], e)}
@@ -251,19 +304,19 @@ function InteractiveThreadStatesChart() {
                       <mask fill="white" id="path-3-inside-2_189_709">
                         <path d={svgPaths.p25273500} />
                       </mask>
-                      <motion.path 
-                        d={svgPaths.p25273500} 
+                      <motion.path
+                        d={svgPaths.p25273500}
                         fill={hoveredSegment === 'running' ? `url(#gradient-running)` : '#0088FE'}
-                        mask="url(#path-3-inside-2_189_709)" 
-                        stroke="white" 
+                        mask="url(#path-3-inside-2_189_709)"
+                        stroke="white"
                         strokeWidth="3"
                         initial={{ pathLength: 0, opacity: 0 }}
-                        animate={{ 
-                          pathLength: 1, 
+                        animate={{
+                          pathLength: 1,
                           opacity: 1,
                           strokeWidth: hoveredSegment === 'running' ? 5 : 3
                         }}
-                        transition={{ 
+                        transition={{
                           pathLength: { duration: 2, delay: 0.8, ease: "easeOut" },
                           opacity: { duration: 0.5, delay: 0.8 },
                           strokeWidth: { duration: 0.3 }
@@ -273,7 +326,7 @@ function InteractiveThreadStatesChart() {
                         }}
                       />
                     </motion.g>
-                    
+
                     {/* Blocked Segment */}
                     <motion.g
                       onMouseEnter={(e) => handleSegmentHover(segmentData[2], e)}
@@ -294,19 +347,19 @@ function InteractiveThreadStatesChart() {
                       <mask fill="white" id="path-4-inside-3_189_709">
                         <path d={svgPaths.p2b7b3800} />
                       </mask>
-                      <motion.path 
-                        d={svgPaths.p2b7b3800} 
+                      <motion.path
+                        d={svgPaths.p2b7b3800}
                         fill={hoveredSegment === 'blocked' ? `url(#gradient-blocked)` : '#FFBB28'}
-                        mask="url(#path-4-inside-3_189_709)" 
-                        stroke="white" 
+                        mask="url(#path-4-inside-3_189_709)"
+                        stroke="white"
                         strokeWidth="3"
                         initial={{ pathLength: 0, opacity: 0 }}
-                        animate={{ 
-                          pathLength: 1, 
+                        animate={{
+                          pathLength: 1,
                           opacity: 1,
                           strokeWidth: hoveredSegment === 'blocked' ? 5 : 3
                         }}
-                        transition={{ 
+                        transition={{
                           pathLength: { duration: 2, delay: 1.0, ease: "easeOut" },
                           opacity: { duration: 0.5, delay: 1.0 },
                           strokeWidth: { duration: 0.3 }
@@ -316,7 +369,7 @@ function InteractiveThreadStatesChart() {
                         }}
                       />
                     </motion.g>
-                    
+
                     {/* Timed Waiting Segment */}
                     <motion.g
                       onMouseEnter={(e) => handleSegmentHover(segmentData[3], e)}
@@ -337,19 +390,19 @@ function InteractiveThreadStatesChart() {
                       <mask fill="white" id="path-5-inside-4_189_709">
                         <path d={svgPaths.p2ecb4470} />
                       </mask>
-                      <motion.path 
-                        d={svgPaths.p2ecb4470} 
+                      <motion.path
+                        d={svgPaths.p2ecb4470}
                         fill={hoveredSegment === 'timed_waiting' ? `url(#gradient-timed_waiting)` : '#FF8042'}
-                        mask="url(#path-5-inside-4_189_709)" 
-                        stroke="white" 
+                        mask="url(#path-5-inside-4_189_709)"
+                        stroke="white"
                         strokeWidth="3"
                         initial={{ pathLength: 0, opacity: 0 }}
-                        animate={{ 
-                          pathLength: 1, 
+                        animate={{
+                          pathLength: 1,
                           opacity: 1,
                           strokeWidth: hoveredSegment === 'timed_waiting' ? 5 : 3
                         }}
-                        transition={{ 
+                        transition={{
                           pathLength: { duration: 2, delay: 1.2, ease: "easeOut" },
                           opacity: { duration: 0.5, delay: 1.2 },
                           strokeWidth: { duration: 0.3 }
@@ -359,7 +412,7 @@ function InteractiveThreadStatesChart() {
                         }}
                       />
                     </motion.g>
-                    
+
                     {/* Terminated Segment */}
                     <motion.g
                       onMouseEnter={(e) => handleSegmentHover(segmentData[4], e)}
@@ -380,19 +433,19 @@ function InteractiveThreadStatesChart() {
                       <mask fill="white" id="path-6-inside-5_189_709">
                         <path d={svgPaths.p23e66c00} />
                       </mask>
-                      <motion.path 
-                        d={svgPaths.p23e66c00} 
+                      <motion.path
+                        d={svgPaths.p23e66c00}
                         fill={hoveredSegment === 'terminated' ? `url(#gradient-terminated)` : '#8884D8'}
-                        mask="url(#path-6-inside-5_189_709)" 
-                        stroke="white" 
+                        mask="url(#path-6-inside-5_189_709)"
+                        stroke="white"
                         strokeWidth="3"
                         initial={{ pathLength: 0, opacity: 0 }}
-                        animate={{ 
-                          pathLength: 1, 
+                        animate={{
+                          pathLength: 1,
                           opacity: 1,
                           strokeWidth: hoveredSegment === 'terminated' ? 5 : 3
                         }}
-                        transition={{ 
+                        transition={{
                           pathLength: { duration: 2, delay: 1.4, ease: "easeOut" },
                           opacity: { duration: 0.5, delay: 1.4 },
                           strokeWidth: { duration: 0.3 }
@@ -405,9 +458,9 @@ function InteractiveThreadStatesChart() {
                   </g>
                 </svg>
               </motion.div>
-              
+
               {/* Enhanced Interactive Labels with Better Positioning */}
-              <motion.div 
+              <motion.div
                 className="absolute left-[88px] top-[151px] cursor-pointer group"
                 initial={{ opacity: 0, x: -30, scale: 0.8 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -417,8 +470,8 @@ function InteractiveThreadStatesChart() {
               >
                 <motion.div
                   className="relative px-4 py-2 rounded-lg bg-white/80 backdrop-blur-sm border border-[#00C49F]/20 shadow-lg"
-                  whileHover={{ 
-                    scale: 1.1, 
+                  whileHover={{
+                    scale: 1.1,
                     x: -12,
                     backgroundColor: 'rgba(0, 196, 159, 0.1)',
                     borderColor: 'rgba(0, 196, 159, 0.5)',
@@ -429,7 +482,7 @@ function InteractiveThreadStatesChart() {
                     borderColor: hoveredSegment === 'waiting' ? 'rgba(0, 196, 159, 0.6)' : 'rgba(0, 196, 159, 0.2)'
                   }}
                 >
-                  <motion.p 
+                  <motion.p
                     className="font-medium text-[#00c49f] text-sm"
                     animate={{
                       color: hoveredSegment === 'waiting' ? '#00E5B8' : '#00c49f',
@@ -448,8 +501,8 @@ function InteractiveThreadStatesChart() {
                   />
                 </motion.div>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="absolute left-[58px] top-[340px] cursor-pointer group"
                 initial={{ opacity: 0, x: -30, scale: 0.8 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -459,8 +512,8 @@ function InteractiveThreadStatesChart() {
               >
                 <motion.div
                   className="relative px-4 py-2 rounded-lg bg-white/80 backdrop-blur-sm border border-[#FFBB28]/20 shadow-lg"
-                  whileHover={{ 
-                    scale: 1.1, 
+                  whileHover={{
+                    scale: 1.1,
                     x: -12,
                     backgroundColor: 'rgba(255, 187, 40, 0.1)',
                     borderColor: 'rgba(255, 187, 40, 0.5)',
@@ -471,7 +524,7 @@ function InteractiveThreadStatesChart() {
                     borderColor: hoveredSegment === 'blocked' ? 'rgba(255, 187, 40, 0.6)' : 'rgba(255, 187, 40, 0.2)'
                   }}
                 >
-                  <motion.p 
+                  <motion.p
                     className="font-medium text-[#ffbb28] text-sm"
                     animate={{
                       color: hoveredSegment === 'blocked' ? '#FFD93A' : '#ffbb28',
@@ -490,8 +543,8 @@ function InteractiveThreadStatesChart() {
                   />
                 </motion.div>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="absolute right-[98px] top-[119px] cursor-pointer group"
                 initial={{ opacity: 0, x: 30, scale: 0.8 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -501,8 +554,8 @@ function InteractiveThreadStatesChart() {
               >
                 <motion.div
                   className="relative px-4 py-2 rounded-lg bg-white/80 backdrop-blur-sm border border-[#0088FE]/20 shadow-lg"
-                  whileHover={{ 
-                    scale: 1.1, 
+                  whileHover={{
+                    scale: 1.1,
                     x: 12,
                     backgroundColor: 'rgba(0, 136, 254, 0.1)',
                     borderColor: 'rgba(0, 136, 254, 0.5)',
@@ -513,7 +566,7 @@ function InteractiveThreadStatesChart() {
                     borderColor: hoveredSegment === 'running' ? 'rgba(0, 136, 254, 0.6)' : 'rgba(0, 136, 254, 0.2)'
                   }}
                 >
-                  <motion.p 
+                  <motion.p
                     className="font-medium text-[#0088fe] text-sm"
                     animate={{
                       color: hoveredSegment === 'running' ? '#2A9BFF' : '#0088fe',
@@ -532,8 +585,8 @@ function InteractiveThreadStatesChart() {
                   />
                 </motion.div>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="absolute right-[58px] top-[205px] cursor-pointer group"
                 initial={{ opacity: 0, x: 30, scale: 0.8 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -543,8 +596,8 @@ function InteractiveThreadStatesChart() {
               >
                 <motion.div
                   className="relative px-4 py-2 rounded-lg bg-white/80 backdrop-blur-sm border border-[#8884D8]/20 shadow-lg"
-                  whileHover={{ 
-                    scale: 1.1, 
+                  whileHover={{
+                    scale: 1.1,
                     x: 12,
                     backgroundColor: 'rgba(136, 132, 216, 0.1)',
                     borderColor: 'rgba(136, 132, 216, 0.5)',
@@ -555,7 +608,7 @@ function InteractiveThreadStatesChart() {
                     borderColor: hoveredSegment === 'terminated' ? 'rgba(136, 132, 216, 0.6)' : 'rgba(136, 132, 216, 0.2)'
                   }}
                 >
-                  <motion.p 
+                  <motion.p
                     className="font-medium text-[#8884d8] text-sm"
                     animate={{
                       color: hoveredSegment === 'terminated' ? '#A296E8' : '#8884d8',
@@ -574,8 +627,8 @@ function InteractiveThreadStatesChart() {
                   />
                 </motion.div>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="absolute right-[108px] top-[340px] cursor-pointer group"
                 initial={{ opacity: 0, x: 30, scale: 0.8 }}
                 animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -585,8 +638,8 @@ function InteractiveThreadStatesChart() {
               >
                 <motion.div
                   className="relative px-4 py-2 rounded-lg bg-white/80 backdrop-blur-sm border border-[#FF8042]/20 shadow-lg"
-                  whileHover={{ 
-                    scale: 1.1, 
+                  whileHover={{
+                    scale: 1.1,
                     x: 12,
                     backgroundColor: 'rgba(255, 128, 66, 0.1)',
                     borderColor: 'rgba(255, 128, 66, 0.5)',
@@ -597,7 +650,7 @@ function InteractiveThreadStatesChart() {
                     borderColor: hoveredSegment === 'timed_waiting' ? 'rgba(255, 128, 66, 0.6)' : 'rgba(255, 128, 66, 0.2)'
                   }}
                 >
-                  <motion.p 
+                  <motion.p
                     className="font-medium text-[#ff8042] text-sm"
                     animate={{
                       color: hoveredSegment === 'timed_waiting' ? '#FF9B54' : '#ff8042',
@@ -634,7 +687,7 @@ function InteractiveThreadStatesChart() {
                 }}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
               >
-                <motion.div 
+                <motion.div
                   className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white px-6 py-4 rounded-2xl shadow-2xl border border-gray-600/50 backdrop-blur-lg min-w-[200px]"
                   animate={{
                     boxShadow: [
@@ -646,16 +699,16 @@ function InteractiveThreadStatesChart() {
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 >
                   <div className="flex items-center space-x-3 mb-3">
-                    <motion.div 
+                    <motion.div
                       className="w-5 h-5 rounded-full shadow-lg ring-2 ring-white/30 flex-shrink-0"
                       style={{ backgroundColor: tooltip.data.color }}
-                      animate={{ 
+                      animate={{
                         scale: [1, 1.3, 1],
                         rotate: [0, 180, 360]
                       }}
                       transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                     />
-                    <motion.span 
+                    <motion.span
                       className="font-bold text-white leading-tight"
                       animate={{
                         textShadow: [
@@ -670,7 +723,7 @@ function InteractiveThreadStatesChart() {
                     </motion.span>
                   </div>
                   <div className="space-y-2 text-sm">
-                    <motion.div 
+                    <motion.div
                       className="flex justify-between items-center"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -679,7 +732,7 @@ function InteractiveThreadStatesChart() {
                       <span className="text-gray-300">Threads:</span>
                       <span className="font-bold text-white">{tooltip.data.value}</span>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       className="flex justify-between items-center"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -689,7 +742,7 @@ function InteractiveThreadStatesChart() {
                       <span className="font-bold text-white">{tooltip.data.percentage}</span>
                     </motion.div>
                   </div>
-                  
+
                   {/* Sparkle Effects */}
                   {[...Array(3)].map((_, i) => (
                     <motion.div
@@ -733,6 +786,35 @@ function InteractiveThreadStatesChart() {
     </motion.div>
   )
 }
+function generatePerformanceData(threads:any) {
+  const now = new Date();
+  const performanceData = [];
+
+  for (let i = 0; i < 8; i++) {
+    // Create a time label, e.g., "14:00", "14:01", ...
+    const time = new Date(now.getTime() - (7 - i) * 60 * 1000); // 1-min intervals
+    const timeLabel = time.getHours().toString().padStart(2, '0') + ':' + time.getMinutes().toString().padStart(2, '0');
+
+    // Aggregate thread CPU times for this snapshot
+    const cpuUsage = Math.round(
+      (threads.reduce((sum, t) => sum + t.cpu_ms, 0) / (threads.length * 1000)) * Math.random() * 100
+    );
+
+    const memoryUsage = Math.round(Math.random() * 40 + 50); // simulate 50-90%
+    const threadCount = threads.length;
+    const responseTime = Math.round(Math.random() * 100 + 80); // simulate 80-180ms
+
+    performanceData.push({
+      time: timeLabel,
+      cpuUsage,
+      memoryUsage,
+      threadCount,
+      responseTime
+    });
+  }
+
+  return performanceData;
+}
 
 // Enhanced Performance Metrics Over Time Chart
 function InteractivePerformanceMetricsChart() {
@@ -742,41 +824,45 @@ function InteractivePerformanceMetricsChart() {
   const [isRealTime, setIsRealTime] = useState(false)
   const [animationProgress, setAnimationProgress] = useState(0)
   const [isChartReady, setIsChartReady] = useState(false)
+  const { threads } = useApi();
 
   // Chart configuration using CSS custom properties
   const metricsConfig = {
-    cpuUsage: { 
-      color: 'var(--chart-1)', 
+    cpuUsage: {
+      color: 'var(--chart-1)',
       hoverColor: '#4F8EFF',
-      label: 'CPU Usage', 
+      label: 'CPU Usage',
       unit: '%',
       max: 100
     },
-    memoryUsage: { 
-      color: 'var(--chart-2)', 
+    memoryUsage: {
+      color: 'var(--chart-2)',
       hoverColor: '#22C55E',
-      label: 'Memory Usage', 
+      label: 'Memory Usage',
       unit: '%',
       max: 100
     },
-    threadCount: { 
-      color: 'var(--chart-3)', 
+    threadCount: {
+      color: 'var(--chart-3)',
       hoverColor: '#F59E0B',
-      label: 'Thread Count', 
+      label: 'Thread Count',
       unit: ' threads',
       max: 300
     },
-    responseTime: { 
-      color: 'var(--chart-4)', 
+    responseTime: {
+      color: 'var(--chart-4)',
       hoverColor: '#EF4444',
-      label: 'Response Time', 
+      label: 'Response Time',
       unit: 'ms',
       max: 500
     }
   }
 
+
+
   // Initialize with sample data
   useEffect(() => {
+
     const baseData: PerformanceDataPoint[] = [
       { time: '14:00', cpuUsage: 45, memoryUsage: 62, threadCount: 94, responseTime: 120 },
       { time: '14:01', cpuUsage: 52, memoryUsage: 58, threadCount: 89, responseTime: 135 },
@@ -787,9 +873,11 @@ function InteractivePerformanceMetricsChart() {
       { time: '14:06', cpuUsage: 71, memoryUsage: 73, threadCount: 105, responseTime: 178 },
       { time: '14:07', cpuUsage: 35, memoryUsage: 45, threadCount: 82, responseTime: 89 }
     ]
-    
+const baseData2 = generatePerformanceData(threads);
+console.log(baseData,baseData2,'vsdvsdvdssd');
+
     setRealTimeData(baseData)
-    
+
     // Start animation sequence
     setTimeout(() => setIsChartReady(true), 1000)
     setTimeout(() => setIsRealTime(true), 3000)
@@ -803,10 +891,10 @@ function InteractivePerformanceMetricsChart() {
       setRealTimeData(prevData => {
         const lastPoint = prevData[prevData.length - 1]
         const now = new Date()
-        const timeStr = now.toLocaleTimeString('en-US', { 
-          hour12: false, 
+        const timeStr = now.toLocaleTimeString('en-US', {
+          hour12: false,
           hour: '2-digit',
-          minute: '2-digit' 
+          minute: '2-digit'
         })
 
         const newPoint: PerformanceDataPoint = {
@@ -827,11 +915,11 @@ function InteractivePerformanceMetricsChart() {
   // Animation progress tracker
   useEffect(() => {
     if (!isRealTime) return
-    
+
     const timer = setInterval(() => {
       setAnimationProgress(prev => (prev + 0.8) % 100)
     }, 80)
-    
+
     return () => clearInterval(timer)
   }, [isRealTime])
 
@@ -894,32 +982,31 @@ function InteractivePerformanceMetricsChart() {
         />
 
         <div className="relative overflow-visible py-[0px] py-[11px] px-[23px] px-[21px]">
-          <motion.div 
+          <motion.div
             className="mb-6"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
           >
             <div className="flex items-center justify-between mb-3">
-              <motion.h3 
+              <motion.h3
                 className="text-xl font-semibold text-gray-900"
-                animate={{ 
+                animate={{
                   textShadow: hoveredMetric ? '0 0 20px rgba(79, 70, 229, 0.3)' : '0 0 0px rgba(79, 70, 229, 0)'
                 }}
               >
                 Performance Metrics Over Time
               </motion.h3>
-              <motion.div 
-                className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  isRealTime 
-                    ? 'bg-green-100 text-green-700 border border-green-200' 
+              <motion.div
+                className={`px-3 py-1 rounded-full text-xs font-medium ${isRealTime
+                    ? 'bg-green-100 text-green-700 border border-green-200'
                     : 'bg-gray-100 text-gray-600 border border-gray-200'
-                }`}
+                  }`}
                 animate={{
                   scale: isRealTime ? [1, 1.05, 1] : 1,
                   boxShadow: isRealTime ? [
-                    '0 0 0px rgba(34, 197, 94, 0)', 
-                    '0 0 20px rgba(34, 197, 94, 0.4)', 
+                    '0 0 0px rgba(34, 197, 94, 0)',
+                    '0 0 20px rgba(34, 197, 94, 0.4)',
                     '0 0 0px rgba(34, 197, 94, 0)'
                   ] : '0 0 0px rgba(34, 197, 94, 0)'
                 }}
@@ -932,7 +1019,7 @@ function InteractivePerformanceMetricsChart() {
           </motion.div>
 
           {/* Interactive Metrics Legend */}
-          <motion.div 
+          <motion.div
             className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -941,7 +1028,7 @@ function InteractivePerformanceMetricsChart() {
             {Object.entries(metricsConfig).map(([metricKey, config], index) => {
               const isHovered = hoveredMetric === metricKey
               const currentValue = realTimeData[realTimeData.length - 1]?.[metricKey as keyof PerformanceDataPoint] || 0
-              
+
               return (
                 <motion.div
                   key={metricKey}
@@ -969,7 +1056,7 @@ function InteractivePerformanceMetricsChart() {
                     transition={{ duration: 0.6, repeat: isHovered ? Infinity : 0 }}
                   />
                   <div className="min-w-0 flex-1">
-                    <motion.p 
+                    <motion.p
                       className="text-sm font-medium text-gray-900 truncate"
                       animate={{
                         color: isHovered ? config.hoverColor : undefined,
@@ -1006,19 +1093,19 @@ function InteractivePerformanceMetricsChart() {
                     <stop offset="100%" stopColor={config.color} stopOpacity="0.05" />
                   </linearGradient>
                 ))}
-                
+
                 {/* Advanced glow filter */}
                 <filter id="performance-glow">
-                  <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
-                  <feMerge> 
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
+                  <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+                  <feMerge>
+                    <feMergeNode in="coloredBlur" />
+                    <feMergeNode in="SourceGraphic" />
                   </feMerge>
                 </filter>
 
                 {/* Grid pattern */}
                 <pattern id="performance-grid" width="50" height="35" patternUnits="userSpaceOnUse">
-                  <path d="M 50 0 L 0 0 0 35" fill="none" stroke="#f1f5f9" strokeWidth="1" opacity="0.6"/>
+                  <path d="M 50 0 L 0 0 0 35" fill="none" stroke="#f1f5f9" strokeWidth="1" opacity="0.6" />
                 </pattern>
               </defs>
 
@@ -1072,11 +1159,11 @@ function InteractivePerformanceMetricsChart() {
                       d={areaD}
                       fill={`url(#perf-gradient-${metricKey})`}
                       initial={{ pathLength: 0, opacity: 0 }}
-                      animate={{ 
-                        pathLength: 1, 
-                        opacity: hoveredMetric === metricKey || !hoveredMetric ? 0.8 : 0.3 
+                      animate={{
+                        pathLength: 1,
+                        opacity: hoveredMetric === metricKey || !hoveredMetric ? 0.8 : 0.3
                       }}
-                      transition={{ 
+                      transition={{
                         pathLength: { duration: 2.5, delay: 1 + index * 0.3, ease: "easeOut" },
                         opacity: { duration: 0.4 }
                       }}
@@ -1093,8 +1180,8 @@ function InteractivePerformanceMetricsChart() {
                       filter={hoveredMetric === metricKey ? "url(#performance-glow)" : "none"}
                       initial={{ pathLength: 0 }}
                       animate={{ pathLength: 1 }}
-                      transition={{ 
-                        duration: 2.5, 
+                      transition={{
+                        duration: 2.5,
                         delay: 1 + index * 0.3,
                         ease: "easeOut"
                       }}
@@ -1114,17 +1201,17 @@ function InteractivePerformanceMetricsChart() {
                           fill={config.color}
                           opacity={hoveredMetric === metricKey ? 0.2 : 0}
                           initial={{ r: 0 }}
-                          animate={{ 
+                          animate={{
                             r: hoveredMetric === metricKey ? 12 : 8,
                             opacity: hoveredMetric === metricKey ? [0.1, 0.3, 0.1] : 0
                           }}
-                          transition={{ 
+                          transition={{
                             delay: 1.8 + index * 0.3 + pointIndex * 0.1,
                             duration: 2,
                             repeat: hoveredMetric === metricKey ? Infinity : 0
                           }}
                         />
-                        
+
                         {/* Main Data Point */}
                         <motion.circle
                           cx={point.x}
@@ -1135,17 +1222,17 @@ function InteractivePerformanceMetricsChart() {
                           strokeWidth="2"
                           className="cursor-pointer"
                           initial={{ scale: 0, r: 0 }}
-                          animate={{ 
+                          animate={{
                             scale: 1,
                             r: hoveredMetric === metricKey ? 6 : 4
                           }}
-                          transition={{ 
+                          transition={{
                             delay: 1.8 + index * 0.3 + pointIndex * 0.1,
                             type: "spring",
                             stiffness: 400,
                             damping: 25
                           }}
-                          whileHover={{ 
+                          whileHover={{
                             scale: 1.8,
                             transition: { type: "spring", stiffness: 600, damping: 15 }
                           }}
@@ -1227,7 +1314,7 @@ function InteractivePerformanceMetricsChart() {
                 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
               >
-                <motion.div 
+                <motion.div
                   className="relative bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white px-5 py-4 rounded-2xl shadow-2xl border border-gray-600/50 backdrop-blur-lg min-w-[220px]"
                   animate={{
                     boxShadow: [
@@ -1239,17 +1326,17 @@ function InteractivePerformanceMetricsChart() {
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 >
                   <div className="flex items-center space-x-3 mb-3">
-                    <motion.div 
+                    <motion.div
                       className="w-5 h-5 rounded-full shadow-lg"
                       style={{ backgroundColor: tooltip.data.color }}
-                      animate={{ 
+                      animate={{
                         scale: [1, 1.2, 1],
                         rotate: [0, 180, 360],
                         boxShadow: [`0 0 10px ${tooltip.data.color}60`, `0 0 20px ${tooltip.data.color}80`, `0 0 10px ${tooltip.data.color}60`]
                       }}
                       transition={{ duration: 2, repeat: Infinity }}
                     />
-                    <motion.span 
+                    <motion.span
                       className="font-bold text-white leading-tight"
                       animate={{
                         textShadow: [
@@ -1263,16 +1350,16 @@ function InteractivePerformanceMetricsChart() {
                       {tooltip.data.metric}
                     </motion.span>
                   </div>
-                  
+
                   <div className="space-y-2 text-sm">
-                    <motion.div 
+                    <motion.div
                       className="flex justify-between items-center"
                       initial={{ opacity: 0, x: -15 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 }}
                     >
                       <span className="text-gray-300">Value:</span>
-                      <motion.span 
+                      <motion.span
                         className="font-bold text-white"
                         animate={{ scale: [1, 1.05, 1] }}
                         transition={{ duration: 2, repeat: Infinity }}
@@ -1280,7 +1367,7 @@ function InteractivePerformanceMetricsChart() {
                         {tooltip.data.value.toFixed(1)}{tooltip.data.unit}
                       </motion.span>
                     </motion.div>
-                    <motion.div 
+                    <motion.div
                       className="flex justify-between items-center"
                       initial={{ opacity: 0, x: -15 }}
                       animate={{ opacity: 1, x: 0 }}
@@ -1290,7 +1377,7 @@ function InteractivePerformanceMetricsChart() {
                       <span className="font-bold text-white">{tooltip.data.time}</span>
                     </motion.div>
                   </div>
-                  
+
                   {/* Sparkle Effects */}
                   {[...Array(4)].map((_, i) => (
                     <motion.div

@@ -1,6 +1,8 @@
 import { Button } from './ui/button'
 import { motion } from 'motion/react'
 import svgPaths from '../imports/svg-j6oofrpt8j'
+import { useApi } from "../../contexts/ApiContext";
+
 
 interface MetricsOverviewProps {
   isMobile?: boolean
@@ -72,11 +74,17 @@ function CpuIcon({ className }: { className?: string }) {
 }
 
 export function MetricsOverview({ isMobile = false }: MetricsOverviewProps) {
+  const { threads } = useApi() as { threads: any[] }
+  const totalThreads = threads?.length || 0
+  const avgCpu = threads?.length
+    ? (threads.reduce((sum: number, t: any) => sum + t.cpu_ms, 0) / threads.length).toFixed(1)
+    : 0
+  const blockedThreads = threads?.filter((t: any) => t.state.includes('WAITING')).length || 0
 
   const metrics = [
     {
       title: 'Total Threads',
-      value: '247',
+      value: `${totalThreads}`,
       description: 'Active Threads Detected',
       backgroundColor: '#3fad8c',
       hoverColor: '#35956f',
@@ -87,7 +95,7 @@ export function MetricsOverview({ isMobile = false }: MetricsOverviewProps) {
     },
     {
       title: 'Blocked Threads',
-      value: '23',
+      value: `${blockedThreads}`,
       description: 'Threads waiting for resources',
       backgroundColor: '#ff8a44',
       hoverColor: '#e8733b',
@@ -98,7 +106,7 @@ export function MetricsOverview({ isMobile = false }: MetricsOverviewProps) {
     },
     {
       title: 'CPU Usage',
-      value: '73.2%',
+      value: `${avgCpu}%`,
       description: 'Average CPU utilization',
       backgroundColor: '#5294de',
       hoverColor: '#4682c8',

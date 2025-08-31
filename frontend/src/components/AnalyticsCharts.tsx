@@ -1,34 +1,68 @@
+import { useEffect, useState } from 'react';
+
+import { 
+  fetchThreads, 
+  getThreadStateData, 
+  getTopThreadsByCpuTime, 
+  getPerformanceOverTime, 
+  ThreadStateData, 
+  TopThread, 
+  PerformanceData 
+} from '../utils/threadHelper';
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell, Legend } from 'recharts'
 
 export function AnalyticsCharts() {
   // Mock data for charts
-  const threadStateData = [
-    { name: 'RUNNING', value: 45, count: 45 },
-    { name: 'WAITING', value: 89, count: 89 },
-    { name: 'BLOCKED', value: 23, count: 23 },
-    { name: 'TIMED_WAITING', value: 67, count: 67 },
-    { name: 'TERMINATED', value: 12, count: 12 }
-  ]
+  // const threadStateData = [
+  //   { name: 'RUNNING', value: 45, count: 45 },
+  //   { name: 'WAITING', value: 89, count: 89 },
+  //   { name: 'BLOCKED', value: 23, count: 23 },
+  //   { name: 'TIMED_WAITING', value: 67, count: 67 },
+  //   { name: 'TERMINATED', value: 12, count: 12 }
+  // ]
 
-  const performanceOverTime = [
-    { time: '00:00', cpu: 45, memory: 67, threads: 234 },
-    { time: '00:15', cpu: 52, memory: 71, threads: 245 },
-    { time: '00:30', cpu: 48, memory: 69, threads: 238 },
-    { time: '00:45', cpu: 61, memory: 73, threads: 252 },
-    { time: '01:00', cpu: 58, memory: 75, threads: 247 },
-    { time: '01:15', cpu: 63, memory: 78, threads: 261 },
-    { time: '01:30', cpu: 55, memory: 72, threads: 243 }
-  ]
+  // const performanceOverTime = [
+  //   { time: '00:00', cpu: 45, memory: 67, threads: 234 },
+  //   { time: '00:15', cpu: 52, memory: 71, threads: 245 },
+  //   { time: '00:30', cpu: 48, memory: 69, threads: 238 },
+  //   { time: '00:45', cpu: 61, memory: 73, threads: 252 },
+  //   { time: '01:00', cpu: 58, memory: 75, threads: 247 },
+  //   { time: '01:15', cpu: 63, memory: 78, threads: 261 },
+  //   { time: '01:30', cpu: 55, memory: 72, threads: 243 }
+  // ]
 
-  const topThreadsByCpuTime = [
-    { name: 'GC-Thread', cpuTime: 3456, blockedTime: 0 },
-    { name: 'HTTP-Request-Handler', cpuTime: 2341, blockedTime: 234 },
-    { name: 'main', cpuTime: 1234, blockedTime: 45 },
-    { name: 'Thread-Pool-Worker-1', cpuTime: 856, blockedTime: 89 },
-    { name: 'Database-Connection-Pool-1', cpuTime: 456, blockedTime: 12 }
-  ]
+  // const topThreadsByCpuTime = [
+  //   { name: 'GC-Thread', cpuTime: 3456, blockedTime: 0 },
+  //   { name: 'HTTP-Request-Handler', cpuTime: 2341, blockedTime: 234 },
+  //   { name: 'main', cpuTime: 1234, blockedTime: 45 },
+  //   { name: 'Thread-Pool-Worker-1', cpuTime: 856, blockedTime: 89 },
+  //   { name: 'Database-Connection-Pool-1', cpuTime: 456, blockedTime: 12 }
+  // ]
+  const [threadStateData, setThreadStateData] = useState<ThreadStateData[]>([]);
+  const [topThreadsByCpuTime, setTopThreadsByCpuTime] = useState<TopThread[]>([]);
+  const [performanceOverTime, setPerformanceOverTime] = useState<PerformanceData[]>([]);
 
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const rawThreads = await fetchThreads();
+
+        setThreadStateData(getThreadStateData(rawThreads));
+        setTopThreadsByCpuTime(getTopThreadsByCpuTime(rawThreads, 5));
+        setPerformanceOverTime(getPerformanceOverTime(rawThreads, 7));
+      } catch (error) {
+        console.error('Error fetching threads:', error);
+      }
+    }
+
+    loadData();
+  }, []);
+
+  console.log('Thread State Data:', threadStateData);
+  console.log('Top Threads by CPU Time:', topThreadsByCpuTime);
+  console.log('Performance Over Time:', performanceOverTime);
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8']
 
   return (

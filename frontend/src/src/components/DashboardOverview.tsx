@@ -4,12 +4,12 @@ import { Button } from './ui/button'
 import { Badge } from './ui/badge'
 import { InteractiveFigmaCharts } from './InteractiveFigmaCharts'
 import { motion, AnimatePresence } from 'motion/react'
-import { 
-  Users, 
-  AlertTriangle, 
-  Cpu, 
-  Clock, 
-  Lock, 
+import {
+  Users,
+  AlertTriangle,
+  Cpu,
+  Clock,
+  Lock,
   TrendingUp,
   FileText,
   Download,
@@ -19,6 +19,7 @@ import {
   Check,
   X
 } from 'lucide-react'
+import { useApi } from "../../contexts/ApiContext";
 
 interface Toast {
   id: string
@@ -118,7 +119,7 @@ function MetricCard({ title, value, description, color, icon, trend, onClick }: 
       className="group"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      whileHover={{ 
+      whileHover={{
         y: -8,
         transition: { type: "spring", stiffness: 400, damping: 25 }
       }}
@@ -129,11 +130,11 @@ function MetricCard({ title, value, description, color, icon, trend, onClick }: 
           className="absolute inset-0 bg-gradient-to-br from-white via-transparent to-gray-50/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           initial={false}
         />
-        
+
         <div className="p-6 space-y-4 relative z-10">
           {/* Header with icon */}
           <div className="flex items-center justify-between">
-            <motion.div 
+            <motion.div
               className={`p-3 rounded-xl transition-all duration-300 ${colors.bg} ${colors.hover}`}
               animate={{
                 scale: isHovered ? 1.1 : 1,
@@ -141,7 +142,7 @@ function MetricCard({ title, value, description, color, icon, trend, onClick }: 
               }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
             >
-              <motion.div 
+              <motion.div
                 className={`w-6 h-6 ${colors.text}`}
                 animate={{
                   scale: isHovered ? 1.1 : 1,
@@ -151,9 +152,9 @@ function MetricCard({ title, value, description, color, icon, trend, onClick }: 
                 {icon}
               </motion.div>
             </motion.div>
-            
+
             {trend && (
-              <motion.div 
+              <motion.div
                 className="flex items-center space-x-1"
                 animate={{
                   scale: isHovered ? 1.05 : 1,
@@ -165,7 +166,7 @@ function MetricCard({ title, value, description, color, icon, trend, onClick }: 
               </motion.div>
             )}
           </div>
-          
+
           {/* Title */}
           <motion.div
             animate={{
@@ -176,9 +177,9 @@ function MetricCard({ title, value, description, color, icon, trend, onClick }: 
             <h3 className="font-semibold text-gray-900">{title}</h3>
             <p className="text-sm text-gray-600 mt-1">{description}</p>
           </motion.div>
-          
+
           {/* Value */}
-          <motion.div 
+          <motion.div
             className="flex items-baseline justify-between"
             animate={{
               y: isHovered ? -4 : 0,
@@ -188,7 +189,7 @@ function MetricCard({ title, value, description, color, icon, trend, onClick }: 
             <span className={`text-3xl font-bold ${colors.text}`}>
               {value}
             </span>
-            
+
             {/* View More Button */}
             <div className="relative">
               <AnimatePresence>
@@ -219,22 +220,22 @@ function MetricCard({ title, value, description, color, icon, trend, onClick }: 
             </div>
           </motion.div>
         </div>
-        
+
         {/* Animated border glow effect */}
         <motion.div
           className={`absolute inset-0 rounded-lg border-2 opacity-0 group-hover:opacity-30 transition-opacity duration-300 ${colors.text.replace('text-', 'border-')}`}
           animate={{
-            boxShadow: isHovered 
-              ? `0 0 20px ${colors.text.includes('green') ? '#10b981' : 
-                   colors.text.includes('orange') ? '#f97316' : 
-                   colors.text.includes('blue') ? '#3b82f6' : 
-                   colors.text.includes('purple') ? '#8b5cf6' : 
-                   colors.text.includes('red') ? '#ef4444' : '#eab308'}40`
+            boxShadow: isHovered
+              ? `0 0 20px ${colors.text.includes('green') ? '#10b981' :
+                colors.text.includes('orange') ? '#f97316' :
+                  colors.text.includes('blue') ? '#3b82f6' :
+                    colors.text.includes('purple') ? '#8b5cf6' :
+                      colors.text.includes('red') ? '#ef4444' : '#eab308'}40`
               : 'none'
           }}
           transition={{ duration: 0.3 }}
         />
-        
+
         {/* Sparkle effects */}
         <AnimatePresence>
           {isHovered && (
@@ -248,7 +249,7 @@ function MetricCard({ title, value, description, color, icon, trend, onClick }: 
                     top: `${15 + i * 20}%`
                   }}
                   initial={{ opacity: 0, scale: 0 }}
-                  animate={{ 
+                  animate={{
                     opacity: [0, 1, 0],
                     scale: [0, 1.5, 0],
                   }}
@@ -274,21 +275,40 @@ function MetricCard({ title, value, description, color, icon, trend, onClick }: 
 function TopThreadsByCpuChart() {
   const [isVisible, setIsVisible] = useState(false)
   const [hoveredBar, setHoveredBar] = useState<number | null>(null)
+  const { threads } = useApi();
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 500)
     return () => clearTimeout(timer)
   }, [])
 
-  const threadData = [
-    { name: 'GC-Thread', cpuTime: 3600, blockedTime: 150, id: 'TH001', state: 'RUNNABLE' },
-    { name: 'HTTP-Request-Handler', cpuTime: 2100, blockedTime: 320, id: 'TH047', state: 'BLOCKED' },
-    { name: 'main', cpuTime: 1350, blockedTime: 80, id: 'TH000', state: 'RUNNABLE' },
-    { name: 'Thread-Pool-Worker-1', cpuTime: 900, blockedTime: 280, id: 'TH023', state: 'WAITING' },
-    { name: 'Database-Connection-Pool-1', cpuTime: 450, blockedTime: 45, id: 'TH089', state: 'TIMED_WAITING' }
-  ]
+  function createThreadData(threads: any) {
+    // Map threads to include blockedTime (default 0) and normalize state
+    const threadData = threads
+      .map(t => {
+        let state = t.state.toUpperCase();
+        if (state.includes('WAITING')) state = 'WAITING';
+        if (state.includes('TIMED_WAITING')) state = 'TIMED_WAITING';
+        if (state.includes('BLOCKED')) state = 'BLOCKED';
+        if (state.includes('RUNNABLE')) state = 'RUNNABLE';
 
-  const maxTime = Math.max(...threadData.map(t => t.cpuTime + t.blockedTime))
+        return {
+          name: t.name,
+          cpuTime: Math.round(t.cpu_ms),
+          blockedTime: 0, // default, can modify if you have data
+          id: t.id,
+          state
+        };
+      })
+      .sort((a, b) => b.cpuTime - a.cpuTime) // sort descending
+      .slice(0, 5); // top 5
+
+    // Compute maxTime including blockedTime
+    const maxTime = Math.max(...threadData.map(t => t.cpuTime + t.blockedTime));
+
+    return { threadData, maxTime };
+  }
+  const { threadData, maxTime } = createThreadData(threads || []);
 
   return (
     <motion.div
@@ -377,17 +397,17 @@ function TopThreadsByCpuChart() {
                         {/* CPU Time Bar */}
                         <motion.div
                           className="relative overflow-hidden rounded-t-md shadow-sm border border-[#8884d8]/20"
-                          style={{ 
+                          style={{
                             width: '52px',
                             background: 'linear-gradient(to top, #8884d8, #a29bfc)'
                           }}
                           initial={{ height: 0 }}
-                          animate={{ 
+                          animate={{
                             height: isVisible ? `${cpuHeight}px` : 0,
                             boxShadow: isHovered ? '0 4px 12px rgba(136, 132, 216, 0.3)' : '0 2px 4px rgba(0,0,0,0.1)'
                           }}
-                          transition={{ 
-                            delay: 1 + index * 0.15, 
+                          transition={{
+                            delay: 1 + index * 0.15,
                             duration: 0.8,
                             ease: [0.4, 0, 0.2, 1]
                           }}
@@ -408,17 +428,17 @@ function TopThreadsByCpuChart() {
                         {/* Blocked Time Bar */}
                         <motion.div
                           className="relative overflow-hidden rounded-b-md shadow-sm border border-[#00c49f]/20"
-                          style={{ 
+                          style={{
                             width: '52px',
                             background: 'linear-gradient(to top, #00c49f, #00e5b8)'
                           }}
                           initial={{ height: 0 }}
-                          animate={{ 
+                          animate={{
                             height: isVisible ? `${blockedHeight}px` : 0,
                             boxShadow: isHovered ? '0 4px 12px rgba(0, 196, 159, 0.3)' : '0 2px 4px rgba(0,0,0,0.1)'
                           }}
-                          transition={{ 
-                            delay: 1.2 + index * 0.15, 
+                          transition={{
+                            delay: 1.2 + index * 0.15,
                             duration: 0.8,
                             ease: [0.4, 0, 0.2, 1]
                           }}
@@ -450,12 +470,11 @@ function TopThreadsByCpuChart() {
                         <div className="text-xs text-gray-500">
                           ID: {thread.id}
                         </div>
-                        <div className={`text-xs px-2 py-1 rounded-full text-white ${
-                          thread.state === 'RUNNABLE' ? 'bg-green-500' :
+                        <div className={`text-xs px-2 py-1 rounded-full text-white ${thread.state === 'RUNNABLE' ? 'bg-green-500' :
                           thread.state === 'BLOCKED' ? 'bg-red-500' :
-                          thread.state === 'WAITING' ? 'bg-yellow-500' :
-                          'bg-blue-500'
-                        }`}>
+                            thread.state === 'WAITING' ? 'bg-yellow-500' :
+                              'bg-blue-500'
+                          }`}>
                           {thread.state}
                         </div>
                       </motion.div>
@@ -471,7 +490,7 @@ function TopThreadsByCpuChart() {
                 animate={{ scaleX: isVisible ? 1 : 0 }}
                 transition={{ delay: 1, duration: 0.8 }}
               />
-              
+
               {/* X-axis label */}
               <motion.div
                 className="text-center mt-2 text-xs text-gray-500 font-medium"
@@ -620,11 +639,18 @@ export function DashboardOverview() {
   const [refreshing, setRefreshing] = useState(false)
   const [animationStep, setAnimationStep] = useState(0)
   const [toasts, setToasts] = useState<Toast[]>([])
+  const { threads } = useApi() as { threads: any[] }
+
+  const totalThreads = threads?.length || 0
+  const avgCpu = threads?.length
+    ? (threads.reduce((sum: number, t: any) => sum + t.cpu_ms, 0) / threads.length).toFixed(1)
+    : 0
+  const blockedThreads = threads?.filter((t: any) => t.state.includes('WAITING')).length || 0
 
   useEffect(() => {
     // Simulate loading with faster staged animations
     const timer = setTimeout(() => setIsLoading(false), 400)
-    
+
     // Faster staggered animation steps
     const animationTimer = setInterval(() => {
       setAnimationStep(prev => prev + 1)
@@ -648,7 +674,7 @@ export function DashboardOverview() {
   const handleRefresh = async () => {
     setRefreshing(true)
     addToast('Refreshing analysis data...', 'info')
-    
+
     // Simulate refresh with realistic delay
     setTimeout(() => {
       setRefreshing(false)
@@ -658,7 +684,7 @@ export function DashboardOverview() {
 
   const handleExport = () => {
     addToast('Preparing report export...', 'info')
-    
+
     // Simulate export process
     setTimeout(() => {
       addToast('PDF report exported successfully!', 'success')
@@ -687,11 +713,10 @@ export function DashboardOverview() {
         {/* Metrics Cards Skeleton */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[...Array(6)].map((_, i) => (
-            <div 
-              key={i} 
-              className={`h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg animate-pulse transition-all duration-500 ${
-                animationStep > i ? 'opacity-100 translate-y-0' : 'opacity-70 translate-y-2'
-              }`}
+            <div
+              key={i}
+              className={`h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg animate-pulse transition-all duration-500 ${animationStep > i ? 'opacity-100 translate-y-0' : 'opacity-70 translate-y-2'
+                }`}
               style={{ animationDelay: `${i * 100}ms` }}
             >
               <div className="p-6 space-y-4">
@@ -712,11 +737,10 @@ export function DashboardOverview() {
         {/* Charts Skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {[...Array(2)].map((_, i) => (
-            <div 
-              key={i} 
-              className={`h-96 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg animate-pulse transition-all duration-700 ${
-                animationStep > 8 + i ? 'opacity-100 scale-100' : 'opacity-70 scale-95'
-              }`}
+            <div
+              key={i}
+              className={`h-96 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg animate-pulse transition-all duration-700 ${animationStep > 8 + i ? 'opacity-100 scale-100' : 'opacity-70 scale-95'
+                }`}
             >
               <div className="p-6 space-y-6">
                 <div className="space-y-2">
@@ -752,12 +776,12 @@ export function DashboardOverview() {
                 <div className="flex items-end justify-between h-80 px-4">
                   {[...Array(5)].map((_, i) => (
                     <div key={i} className="flex flex-col items-center space-y-3">
-                      <div 
-                        className="bg-gray-300 rounded-sm animate-pulse" 
-                        style={{ 
-                          width: '52px', 
-                          height: `${120 + i * 30}px` 
-                        }} 
+                      <div
+                        className="bg-gray-300 rounded-sm animate-pulse"
+                        style={{
+                          width: '52px',
+                          height: `${120 + i * 30}px`
+                        }}
                       />
                       <div className="space-y-1">
                         <div className="h-3 bg-gray-300 rounded w-16 animate-pulse"></div>
@@ -770,7 +794,7 @@ export function DashboardOverview() {
               </div>
             </div>
           </div>
-          
+
           {/* Description Skeleton */}
           <div className="h-48 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg animate-pulse">
             <div className="p-6 space-y-4">
@@ -822,7 +846,7 @@ export function DashboardOverview() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <MetricCard
             title="Total Threads"
-            value="247"
+            value={totalThreads.toString()}
             description="Active Threads Detected"
             color="green"
             icon={<Users className="w-6 h-6" />}
@@ -832,7 +856,7 @@ export function DashboardOverview() {
 
           <MetricCard
             title="Blocked Threads"
-            value="23"
+            value={blockedThreads.toString()}
             description="Threads Waiting for Resources"
             color="orange"
             icon={<AlertTriangle className="w-6 h-6" />}
@@ -842,7 +866,7 @@ export function DashboardOverview() {
 
           <MetricCard
             title="CPU Usage"
-            value="62%"
+            value={avgCpu + '%'}
             description="Current System Load"
             color="blue"
             icon={<Cpu className="w-6 h-6" />}
@@ -891,10 +915,10 @@ export function DashboardOverview() {
       {/* Toast Container */}
       <div className="fixed bottom-4 right-4 space-y-2 z-40">
         {toasts.map((toast) => (
-          <ToastNotification 
-            key={toast.id} 
-            toast={toast} 
-            onClose={removeToast} 
+          <ToastNotification
+            key={toast.id}
+            toast={toast}
+            onClose={removeToast}
           />
         ))}
       </div>

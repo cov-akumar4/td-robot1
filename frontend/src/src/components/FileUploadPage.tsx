@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useApi } from "../../contexts/ApiContext";
 import svgPaths from "../../imports/svg-l8hl5kmcxt"
 import imgAdobeStock1557906731 from "figma:asset/6e35937e3b22e98725808034c34a71705a4298f6.png"
 import imgAdobeStock5383188882 from "figma:asset/bd19d4b00cbe140ef7d818b109358510cbe66062.png"
@@ -48,7 +49,7 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode, titl
     <div className="group h-[247px] w-full max-w-[378px] bg-[#efefef] rounded-[21px] shadow-sm p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-500 ease-out hover:shadow-2xl hover:shadow-[#315596]/20 hover:scale-105 hover:bg-gradient-to-br hover:from-[#f8f9fa] hover:to-[#e9ecef] hover:-translate-y-2 relative overflow-hidden">
       {/* Animated background gradient on hover */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#315596]/5 to-[#101b30]/5 rounded-[21px] opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-      
+
       {/* Icon container with hover animation */}
       <div className="relative z-10 w-12 h-12 mb-6 flex items-center justify-center transform group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 ease-out">
         <div className="absolute inset-0 bg-[#315596]/10 rounded-full scale-0 group-hover:scale-150 transition-all duration-500 ease-out"></div>
@@ -56,20 +57,20 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode, titl
           {icon}
         </div>
       </div>
-      
+
       {/* Title with hover effect */}
       <h3 className="relative z-10 text-[16px] font-medium text-[#101010] mb-4 group-hover:text-[#315596] transition-colors duration-300">
         {title}
       </h3>
-      
+
       {/* Description with hover effect */}
       <p className="relative z-10 text-[15px] text-[#474747] leading-normal group-hover:text-[#333] transition-colors duration-300">
         {description}
       </p>
-      
+
       {/* Subtle border animation */}
       <div className="absolute inset-0 rounded-[21px] border-2 border-transparent group-hover:border-[#315596]/20 transition-all duration-300"></div>
-      
+
       {/* Shimmer effect on hover */}
       <div className="absolute inset-0 rounded-[21px] opacity-0 group-hover:opacity-100 transition-opacity duration-700">
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"></div>
@@ -83,24 +84,24 @@ function PerformanceIcon() {
   return (
     <svg className="block w-12 h-12 transition-all duration-300 group-hover:drop-shadow-lg" fill="none" preserveAspectRatio="none" viewBox="0 0 48 48">
       <g>
-        <path 
-          clipRule="evenodd" 
-          d={svgPaths.pe6e1180} 
-          fill="#020202" 
+        <path
+          clipRule="evenodd"
+          d={svgPaths.pe6e1180}
+          fill="#020202"
           fillRule="evenodd"
-          className="transition-all duration-300 group-hover:fill-[#315596]" 
+          className="transition-all duration-300 group-hover:fill-[#315596]"
         />
-        <path 
-          clipRule="evenodd" 
-          d={svgPaths.p269a7c60} 
-          fill="#2859C5" 
+        <path
+          clipRule="evenodd"
+          d={svgPaths.p269a7c60}
+          fill="#2859C5"
           fillRule="evenodd"
           className="transition-all duration-300 group-hover:fill-[#4a7bc8]"
         />
-        <path 
-          clipRule="evenodd" 
-          d={svgPaths.p201fbf00} 
-          fill="#020202" 
+        <path
+          clipRule="evenodd"
+          d={svgPaths.p201fbf00}
+          fill="#020202"
           fillRule="evenodd"
           className="transition-all duration-300 group-hover:fill-[#315596]"
         />
@@ -114,13 +115,13 @@ function BarChartIcon() {
   return (
     <svg className="block w-12 h-12 transition-all duration-300 group-hover:drop-shadow-lg" fill="none" preserveAspectRatio="none" viewBox="0 0 45 45">
       <g>
-        <path 
-          d={svgPaths.p1f2ddd80} 
+        <path
+          d={svgPaths.p1f2ddd80}
           fill="#8FBFFA"
           className="transition-all duration-300 group-hover:fill-[#b3d1fc]"
         />
-        <path 
-          d={svgPaths.p20a2a480} 
+        <path
+          d={svgPaths.p20a2a480}
           fill="#2859C5"
           className="transition-all duration-300 group-hover:fill-[#4a7bc8]"
         />
@@ -134,11 +135,11 @@ function CheckIcon() {
   return (
     <svg className="block w-12 h-12 transition-all duration-300 group-hover:drop-shadow-lg" fill="none" preserveAspectRatio="none" viewBox="0 0 48 48">
       <g>
-        <path 
-          d={svgPaths.p945b0e0} 
-          stroke="#2859C5" 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
+        <path
+          d={svgPaths.p945b0e0}
+          stroke="#2859C5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
           strokeWidth="3"
           className="transition-all duration-300 group-hover:stroke-[#4a7bc8] group-hover:stroke-[4]"
         />
@@ -150,6 +151,8 @@ function CheckIcon() {
 
 
 export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPageProps) {
+
+  const { setThreadsData } = useApi();
   const [isDragOver, setIsDragOver] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -167,7 +170,7 @@ export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPa
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragOver(false)
-    
+
     const files = e.dataTransfer.files
     if (files.length > 0) {
       handleFileUpload(files[0])
@@ -185,19 +188,47 @@ export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPa
     // Validate file type
     const validExtensions = ['.txt', '.log', '.dump']
     const fileExtension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'))
-    
+
     if (!validExtensions.includes(fileExtension)) {
       alert('Please upload a valid thread dump file (.txt, .log, or .dump)')
       return
     }
 
     setIsUploading(true)
-    
-    // Simulate upload process
-    setTimeout(() => {
-      setIsUploading(false)
+
+    try {
+      // Prepare FormData
+      const formData = new FormData()
+      formData.append('file', file)
+
+      // Replace the URL with your backend endpoint
+      const response = await fetch('http://127.0.0.1:5000/api/upload', {
+        method: 'POST',
+        body: formData
+      })
+
+      if (!response.ok) {
+        throw new Error('Upload failed')
+      }
+
+      const result = await response.json()
+
+      // Update context with new API response
+      setThreadsData({
+        thread_count: result.thread_count,
+        threads: result.threads
+      })
+
+      // Optional callback to notify parent
       onFileUploaded(file)
-    }, 2000)
+
+      console.log('Upload success:', result)
+    } catch (error) {
+      console.error('Error uploading file:', error)
+      // alert('Failed to upload file. Please try again.')
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   const openFileDialog = () => {
@@ -207,7 +238,7 @@ export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPa
   return (
     <div className="bg-white relative w-full min-h-screen">
       {/* Hero Section with Background */}
-      <div 
+      <div
         className="relative h-[612px] bg-gradient-to-r from-[#315596] to-[#101b30] overflow-hidden"
         style={{
           backgroundImage: `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('${imgAdobeStock1557906731}')`,
@@ -223,9 +254,9 @@ export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPa
                 <User className="w-4 h-4 md:w-5 md:h-5" />
                 <span className="text-xs md:text-sm font-medium truncate max-w-[200px] sm:max-w-none">Welcome, {user.email}</span>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={onSignOut}
                 className="text-white border-white bg-white/20 hover:bg-white/30 hover:text-white hover:border-white backdrop-blur-sm transition-all duration-200 font-medium text-xs md:text-sm"
               >
@@ -249,7 +280,7 @@ export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPa
             <br />
             into thread states, performance bottlenecks, and application behavior.
           </p>
-          
+
           {/* Feature Tags */}
           <div className="flex flex-wrap justify-center gap-4">
             <FeatureTag>Java Thread Dumps</FeatureTag>
@@ -266,12 +297,11 @@ export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPa
             <h2 className="text-[18px] font-normal text-[#101010] text-center mb-12">
               Upload thread Dump
             </h2>
-            
+
             {/* Upload Area */}
-            <div 
-              className={`h-[244px] rounded-[30px] border border-[rgba(255,255,255,0.84)] bg-[#ecf0f3] transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-4 ${
-                isDragOver ? 'shadow-inner bg-blue-50' : 'shadow-[-0.5px_-0.5px_4px_0px_rgba(0,0,0,0.05),-10px_-10px_22px_0px_#ffffff,6px_6px_16px_0px_rgba(0,0,0,0.25)]'
-              }`}
+            <div
+              className={`h-[244px] rounded-[30px] border border-[rgba(255,255,255,0.84)] bg-[#ecf0f3] transition-all duration-300 cursor-pointer flex flex-col items-center justify-center gap-4 ${isDragOver ? 'shadow-inner bg-blue-50' : 'shadow-[-0.5px_-0.5px_4px_0px_rgba(0,0,0,0.05),-10px_-10px_22px_0px_#ffffff,6px_6px_16px_0px_rgba(0,0,0,0.25)]'
+                }`}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
@@ -297,7 +327,7 @@ export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPa
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <div className="relative w-full max-w-[661px]">
                 <div className="bg-[#ecf0f3] h-[45px] w-full rounded-[35px] border border-white shadow-[-1px_-1px_8px_0px_rgba(0,0,0,0.16),1px_1px_8px_0px_rgba(0,0,0,0.16)] flex items-center overflow-hidden">
-                  <Button 
+                  <Button
                     onClick={openFileDialog}
                     className="relative z-10 ml-4 h-[35px] px-6 rounded-[35px] bg-[#ecf0f3] text-[#101010] text-[16px] font-medium border-0 shadow-[-4px_-4px_5px_0px_rgba(255,255,255,0.88),4px_4px_12px_0px_rgba(0,0,0,0.25)] hover:shadow-[-2px_-2px_3px_0px_rgba(255,255,255,0.88),2px_2px_8px_0px_rgba(0,0,0,0.25)] hover:bg-[#e6eaf0] active:shadow-[inset_2px_2px_5px_0px_rgba(0,0,0,0.2)] transition-all duration-200 flex-shrink-0"
                     disabled={isUploading}
@@ -310,7 +340,7 @@ export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPa
                 </div>
               </div>
             </div>
-            
+
             <input
               ref={fileInputRef}
               type="file"
@@ -328,7 +358,7 @@ export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPa
           <h2 className="text-[30px] font-semibold text-white text-center mb-16">
             Why Choose TDBOT?
           </h2>
-          
+
           {/* Enhanced single-line layout with responsive behavior and staggered animation */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-6 xl:gap-8 justify-items-center">
             <div className="animate-in slide-in-from-bottom-4 duration-700 delay-100">
@@ -353,7 +383,7 @@ export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPa
               />
             </div>
           </div>
-          
+
           {/* Optional decorative elements */}
           <div className="flex justify-center mt-12">
             <div className="flex space-x-2">
@@ -387,7 +417,7 @@ export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPa
               Comprehensive thread dump analysis made simple with powerful insights and professional reporting capabilities
             </p>
           </div>
-          
+
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-16 items-center">
             {/* Left side - Enhanced Feature List */}
             <div className="lg:col-span-3 space-y-6">
@@ -466,7 +496,7 @@ export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPa
                 </div>
               </div>
             </div>
-            
+
             {/* Right side - Sophisticated Illustration */}
             <div className="lg:col-span-2 flex justify-center animate-in slide-in-from-right-4 duration-700 delay-300">
               <div className="relative">
@@ -475,7 +505,7 @@ export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPa
                   {/* Multiple layered shadows for depth */}
                   <div className="absolute inset-0 bg-gradient-to-br from-[#315596]/10 to-[#101b30]/5 rounded-3xl blur-xl transform rotate-1 scale-105"></div>
                   <div className="absolute inset-0 bg-gradient-to-tl from-blue-200/20 to-transparent rounded-3xl blur-2xl transform -rotate-1 scale-110"></div>
-                  
+
                   {/* Image container */}
                   <div className="relative bg-white rounded-3xl p-6 shadow-2xl shadow-gray-300/30">
                     {/* Header section */}
@@ -488,42 +518,42 @@ export function FileUploadPage({ onFileUploaded, user, onSignOut }: FileUploadPa
                         Real-time visualization of thread states, performance metrics, and comprehensive system insights
                       </p>
                     </div>
-                    
+
                     {/* Main illustration */}
                     <div className="relative rounded-2xl overflow-hidden shadow-xl">
-                      <img 
-                        src={imgAdobeStock5383188882} 
+                      <img
+                        src={imgAdobeStock5383188882}
                         alt="Interactive thread analysis dashboard showing real-time metrics, thread state visualizations, performance charts, deadlock detection results, and comprehensive system monitoring interfaces used by Java developers for debugging and performance optimization"
                         className="w-full h-auto max-w-[450px] lg:max-w-[500px] min-h-[300px] lg:min-h-[400px] object-cover"
                       />
-                      
+
                       {/* Overlay gradient for better text visibility if needed */}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent"></div>
                     </div>
-                    
+
                     {/* Bottom description */}
                     <div className="mt-6 text-center">
                       <p className="text-[12px] text-gray-500 leading-relaxed max-w-md mx-auto">
-                        Advanced dashboard displays comprehensive thread dump analysis including performance bottlenecks, 
+                        Advanced dashboard displays comprehensive thread dump analysis including performance bottlenecks,
                         deadlock detection, and detailed system metrics for optimal Java application monitoring.
                       </p>
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Floating feature badges */}
                 <div className="absolute -top-4 -left-6 animate-in slide-in-from-left-4 duration-700 delay-700">
                   <div className="bg-white shadow-xl shadow-gray-200/50 rounded-full px-4 py-2 border border-gray-100">
                     <span className="text-[11px] font-medium text-[#315596]">Real-time Analysis</span>
                   </div>
                 </div>
-                
+
                 <div className="absolute -bottom-4 -right-6 animate-in slide-in-from-right-4 duration-700 delay-900">
                   <div className="bg-white shadow-xl shadow-gray-200/50 rounded-full px-4 py-2 border border-gray-100">
                     <span className="text-[11px] font-medium text-[#315596]">Performance Insights</span>
                   </div>
                 </div>
-                
+
                 <div className="absolute top-1/3 -left-8 animate-in slide-in-from-left-4 duration-700 delay-800 hidden xl:block">
                   <div className="bg-white shadow-xl shadow-gray-200/50 rounded-full px-4 py-2 border border-gray-100">
                     <span className="text-[11px] font-medium text-[#315596]">Thread Monitoring</span>
